@@ -1,14 +1,5 @@
 "use client";
 
-import axios from "axios";
-import { Loader2, MessageSquare } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { OpenAI } from "openai";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import z from "zod";
-("openai");
-
 import Heading from "@/components/heading";
 import { Button } from "@/components/ui/button";
 import { Empty } from "@/components/ui/empty";
@@ -16,6 +7,14 @@ import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useProModal } from "@/hooks/use-pro-modal";
 import { zodResolver } from "@hookform/resolvers/zod";
+import axios from "axios";
+import { Code, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { OpenAI } from "openai";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import ReactMarkdown from "react-markdown";
+import z from "zod";
 ("@/components/bot-avatar");
 
 import BotAvatar from "@/components/bot-avatar";
@@ -48,7 +47,7 @@ const ConversationPage = () => {
 
       const newMessages = [...messages, userMessage];
 
-      const response = await axios.post("/api/conversation", {
+      const response = await axios.post("/api/code", {
         messages: newMessages,
       });
 
@@ -62,16 +61,14 @@ const ConversationPage = () => {
     }
   };
 
-  console.log(messages);
-
   return (
     <div>
       <Heading
-        title="Conversation"
-        description="Our most advanced conversation model."
-        Icon={MessageSquare}
-        iconColor="text-violet-500"
-        bgColor="bg-violet-500/10"
+        title="Code"
+        description="Our most advanced code generator."
+        Icon={Code}
+        iconColor="text-green-500"
+        bgColor="bg-green-500/10"
       />
       <div className="px-4 lg:px-8">
         <div>
@@ -133,7 +130,16 @@ const ConversationPage = () => {
                 key={String(message.content)}
               >
                 {message.role === "user" ? <UserAvatar /> : <BotAvatar />}
-                <p className="text-sm">{String(message.content)}</p>
+                <ReactMarkdown
+                  components={{
+                    pre: ({ node, ...props }) => (
+                      <div className="my-2 w-full overflow-auto rounded-lg bg-black/10 p-2"></div>
+                    ),
+                  }}
+                  className="max-w-2xl"
+                >
+                  {String(message.content) || ""}
+                </ReactMarkdown>
               </div>
             ))}
           </div>
