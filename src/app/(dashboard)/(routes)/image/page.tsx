@@ -1,5 +1,14 @@
 "use client";
 
+import axios from "axios";
+import { Image, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { OpenAI } from "openai";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import z from "zod";
+("openai");
+
 import Heading from "@/components/heading";
 import { Button } from "@/components/ui/button";
 import { Empty } from "@/components/ui/empty";
@@ -7,14 +16,6 @@ import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useProModal } from "@/hooks/use-pro-modal";
 import { zodResolver } from "@hookform/resolvers/zod";
-import axios from "axios";
-import { Code, Loader2 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { OpenAI } from "openai";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import ReactMarkdown from "react-markdown";
-import z from "zod";
 ("@/components/bot-avatar");
 
 import BotAvatar from "@/components/bot-avatar";
@@ -22,7 +23,7 @@ import UserAvatar from "@/components/user-avatar";
 import { cn } from "@/lib/utils";
 import { conversationSchema } from "@/schemas";
 
-const ConversationPage = () => {
+const ImagePage = () => {
   const router = useRouter();
   const proModal = useProModal();
   const [messages, setMessages] = useState<
@@ -47,7 +48,7 @@ const ConversationPage = () => {
 
       const newMessages = [...messages, userMessage];
 
-      const response = await axios.post("/api/code", {
+      const response = await axios.post("/api/conversation", {
         messages: newMessages,
       });
 
@@ -61,14 +62,16 @@ const ConversationPage = () => {
     }
   };
 
+  console.log(messages);
+
   return (
     <div>
       <Heading
-        title="Code"
-        description="Our most advanced code generator."
-        Icon={Code}
-        iconColor="text-green-500"
-        bgColor="bg-green-500/10"
+        title="Image Generation"
+        description="Turn your prompt into image"
+        Icon={Image}
+        iconColor="text-pink-500"
+        bgColor="bg-pink-500/10"
       />
       <div className="px-4 lg:px-8">
         <div>
@@ -122,7 +125,7 @@ const ConversationPage = () => {
             {messages.map((message) => (
               <div
                 className={cn(
-                  "flex items-start gap-x-8 rounded-lg p-8",
+                  "flex w-full items-start gap-x-8 rounded-lg p-8",
                   message.role === "user"
                     ? "border border-black/10 bg-white"
                     : "bg-muted",
@@ -130,24 +133,7 @@ const ConversationPage = () => {
                 key={String(message.content)}
               >
                 {message.role === "user" ? <UserAvatar /> : <BotAvatar />}
-                <ReactMarkdown
-                  components={{
-                    pre: ({ node, ...props }) => (
-                      <div className="my-2 w-full overflow-auto rounded-lg bg-black/10 p-2">
-                        <pre {...props} />
-                      </div>
-                    ),
-                    code: ({ node, ...props }) => (
-                      <code
-                        className="rounded-lg bg-black/10 p-px"
-                        {...props}
-                      />
-                    ),
-                  }}
-                  className="overflow-hidden text-sm leading-7"
-                >
-                  {String(message.content) || ""}
-                </ReactMarkdown>
+                <p className="text-sm">{String(message.content)}</p>
               </div>
             ))}
           </div>
@@ -157,4 +143,4 @@ const ConversationPage = () => {
   );
 };
 
-export default ConversationPage;
+export default ImagePage;
