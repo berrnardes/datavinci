@@ -1,0 +1,128 @@
+"use client";
+
+import axios from "axios";
+import { Loader2, Music } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { OpenAI } from "openai";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import z from "zod";
+("openai");
+
+import Heading from "@/components/heading";
+import { Button } from "@/components/ui/button";
+import { Empty } from "@/components/ui/empty";
+import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { useProModal } from "@/hooks/use-pro-modal";
+import { zodResolver } from "@hookform/resolvers/zod";
+("@/components/bot-avatar");
+
+import { conversationSchema } from "@/schemas";
+
+const ConversationPage = () => {
+  const router = useRouter();
+  const proModal = useProModal();
+  const [messages, setMessages] = useState<
+    OpenAI.Chat.ChatCompletionMessageParam[]
+  >([]);
+
+  const form = useForm<z.infer<typeof conversationSchema>>({
+    resolver: zodResolver(conversationSchema),
+    defaultValues: {
+      input: "",
+    },
+  });
+
+  const isLoading = form.formState.isSubmitting;
+
+  const onSubmit = async (values: z.infer<typeof conversationSchema>) => {
+    try {
+      const userMessage: OpenAI.Chat.ChatCompletionMessageParam = {
+        role: "user",
+        content: values.input,
+      };
+
+      const newMessages = [...messages, userMessage];
+
+      const response = await axios.post("/api/conversation", {
+        messages: newMessages,
+      });
+
+      setMessages((current) => [...current, userMessage, response.data]);
+
+      form.reset();
+    } catch (error: any) {
+      console.log(error);
+    } finally {
+      router.refresh();
+    }
+  };
+
+  console.log(messages);
+
+  return (
+    <div>
+      <Heading
+        title="Music Generation"
+        description="Create fantastic music whith this."
+        Icon={Music}
+        iconColor="text-emerald-500"
+        bgColor="bg-emerald-500/10"
+      />
+      <div className="px-4 lg:px-8">
+        <div>
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="grid w-full grid-cols-12 gap-2 rounded-lg border p-4 px-3 focus-within:shadow-sm md:px-6"
+            >
+              <FormField
+                name="input"
+                render={({ field }) => (
+                  <FormItem className="col-span-12 lg:col-span-10">
+                    <FormControl className="m-0 p-0">
+                      <Input
+                        className="border-0 outline-none focus-visible:ring-0 focus-visible:ring-transparent"
+                        disabled={isLoading}
+                        placeholder="Piano solo?"
+                        {...field}
+                        // onKeyDown={(e) => {
+                        //   if (e.key === "Enter" && !e.shiftKey) {
+                        //     e.preventDefault();
+                        //     onSubmit();
+                        //   }
+                        // }}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <Button
+                className="col-span-12 w-full lg:col-span-2"
+                type="submit"
+                disabled={isLoading}
+                size="icon"
+              >
+                Generate
+              </Button>
+            </form>
+          </Form>
+        </div>
+        <div className="mt-4 space-y-4">
+          {isLoading && (
+            <div className="flex w-full items-center justify-center rounded-lg bg-muted p-8">
+              <Loader2 className="h-5 w-5 animate-spin" />
+            </div>
+          )}
+          {messages.length === 0 && !isLoading && (
+            <Empty label="No music generated." />
+          )}
+          <div className="">Music here</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ConversationPage;
